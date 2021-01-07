@@ -132,9 +132,7 @@ var _delegate = __webpack_require__(3);
 
 var _delegate2 = _interopRequireDefault(_delegate);
 
-var _utils = __webpack_require__(5);
-
-var _Link = __webpack_require__(6);
+var _Link = __webpack_require__(5);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -192,8 +190,8 @@ var FormPlugin = function (_Plugin) {
                 var actionAttribute = form.getAttribute('action') || window.location.href;
                 var methodAttribute = form.getAttribute('method') || 'GET';
                 var link = new _Link.Link(actionAttribute);
+                var url = link.getAddress();
 
-                // fomr
                 swup.triggerEvent('submitForm', event);
 
                 event.preventDefault();
@@ -207,50 +205,42 @@ var FormPlugin = function (_Plugin) {
 
                 if (methodAttribute.toLowerCase() != 'get') {
                     // remove page from cache
-                    swup.cache.remove(link.getAddress());
-
-                    // send data
-                    swup.loadPage({
-                        url: link.getAddress(),
-                        method: methodAttribute,
-                        data: formData,
-                        customTransition: customTransition
-                    });
-                } else {
-                    // create base url
-                    var url = link.getAddress() || window.location.href;
-                    var inputs = (0, _utils.queryAll)('input, select', form);
-                    if (url.indexOf('?') == -1) {
-                        url += '?';
-                    } else {
-                        url += '&';
-                    }
-
-                    // add form data to url
-                    inputs.forEach(function (input) {
-                        if (input.type == 'checkbox' || input.type == 'radio') {
-                            if (input.checked) {
-                                url += encodeURIComponent(input.name) + '=' + encodeURIComponent(input.value) + '&';
-                            }
-                        } else {
-                            url += encodeURIComponent(input.name) + '=' + encodeURIComponent(input.value) + '&';
-                        }
-                    });
-
-                    // remove last "&"
-                    url = url.slice(0, -1);
-
-                    // remove page from cache
                     swup.cache.remove(url);
 
                     // send data
                     swup.loadPage({
                         url: url,
+                        method: methodAttribute,
+                        data: formData,
+                        customTransition: customTransition
+                    });
+                } else {
+                    // add form data as query params
+                    var urlWithQuery = this.appendFormDataAsQueryParameters(url, formData);
+
+                    // remove page from cache
+                    swup.cache.remove(urlWithQuery);
+
+                    // send data
+                    swup.loadPage({
+                        url: urlWithQuery,
                         customTransition: customTransition
                     });
                 }
             } else {
                 swup.triggerEvent('openFormSubmitInNewTab', event);
+            }
+        }
+    }, {
+        key: 'appendFormDataAsQueryParameters',
+        value: function appendFormDataAsQueryParameters(url, formData) {
+            var query = new URLSearchParams(formData).toString();
+            if (query && url.indexOf('?') == -1) {
+                return url + '?' + query;
+            } else if (query) {
+                return url + '&' + query;
+            } else {
+                return url;
             }
         }
     }]);
@@ -395,36 +385,6 @@ module.exports = closest;
 
 /***/ }),
 /* 5 */
-/***/ (function(module, exports, __webpack_require__) {
-
-"use strict";
-
-
-Object.defineProperty(exports, "__esModule", {
-	value: true
-});
-var query = exports.query = function query(selector) {
-	var context = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : document;
-
-	if (typeof selector !== 'string') {
-		return selector;
-	}
-
-	return context.querySelector(selector);
-};
-
-var queryAll = exports.queryAll = function queryAll(selector) {
-	var context = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : document;
-
-	if (typeof selector !== 'string') {
-		return selector;
-	}
-
-	return Array.prototype.slice.call(context.querySelectorAll(selector));
-};
-
-/***/ }),
-/* 6 */
 /***/ (function(module, exports, __webpack_require__) {
 
 "use strict";
